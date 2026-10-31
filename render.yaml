@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: los-intocables-fc27
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: CLUB_NAME
+        value: Los Intocables
+      - key: REFRESH_MINUTES
+        value: '5'
+      - key: COOKIE_SECURE
+        value: 'true'
+      - key: ADMIN_USER
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true

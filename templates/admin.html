@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Administración | Los Intocables</title>
+  <link rel="icon" type="image/png" href="/static/favicon.png"><link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="/"><span class="brand-mark"><img src="/static/escudo-intocables.webp" alt="Escudo Los Intocables"></span><span class="brand-copy"><strong>Los Intocables</strong><small>PANEL DE ADMINISTRACIÓN</small></span></a>
+      <div class="header-actions">
+        <a class="ghost-button" href="/">Ver web</a>
+        <button class="ghost-button" id="logout">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <main class="content-wrap admin-page-wrap">
+      <section class="hero-card admin-hero">
+        <div class="hero-copy">
+          <p class="eyebrow">ADMINISTRACIÓN</p>
+          <h1>Control editorial del club</h1>
+          <p class="hero-text">Personaliza el contenido visual del sitio. Las estadísticas y partidos siguen llegando directamente desde FC 27.</p>
+        </div>
+      </section>
+
+      <section class="panel-card admin-form-card">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">PERSONALIZACIÓN</p>
+            <h2>Identidad y portada</h2>
+          </div>
+          <span class="panel-chip">GUARDADO LOCAL</span>
+        </div>
+        <form id="settings" class="settings-grid">
+          <label>Nombre visible<input name="title" maxlength="100"></label>
+          <label>Subtítulo<input name="subtitle" maxlength="200"></label>
+          <label class="full-width">URL pública del escudo (https://...)<input name="crest_url" maxlength="1000" placeholder="https://..."></label>
+          <label class="full-width">Anuncio principal<textarea name="announcement" maxlength="500" rows="4"></textarea></label>
+          <div class="form-actions full-width">
+            <button type="submit" class="primary-button">Guardar cambios</button>
+            <button type="button" id="refresh" class="ghost-button">Actualizar FC27 ahora</button>
+          </div>
+          <p id="message" class="note full-width"></p>
+        </form>
+      </section>
+      <section class="panel-card admin-form-card profile-admin">
+        <div class="panel-head"><div><p class="eyebrow">PLANTILLA</p><h2>Personalizar fichas de jugadores</h2></div></div>
+        <p class="section-intro">Los nombres de la API identifican a cada jugador. Puedes asignar nombre visible, dorsal, posición y foto pública sin modificar estadísticas reales.</p>
+        <div id="profile-editor" class="profile-editor"><p class="note">Cargando jugadores…</p></div>
+      </section>
+    </main>
+  </div>
+  <script src="/static/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Los Intocables | FC 27</title>
+  <link rel="icon" type="image/png" href="/static/favicon.png"><link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="/">
+        <span class="brand-mark"><img src="/static/escudo-intocables.webp" alt="Escudo Los Intocables"></span>
+        <span class="brand-copy">
+          <strong>Los Intocables</strong>
+          <small>EA SPORTS FC 27 · CLUB HUB</small>
+        </span>
+      </a>
+      <nav class="main-nav">
+        <a href="#resumen">Resumen</a>
+        <a href="#partidos">Partidos</a>
+        <a href="#plantilla">Plantilla</a><a href="#fichas">Jugadores</a>
+        <a href="#ranking">Ranking</a>
+      </nav>
+      <div class="header-actions">
+        <div class="live-indicator"><span id="status-dot" class="live-dot"></span><span id="status">Conectando…</span></div>
+        <a class="ghost-button" href="/login">Admin</a>
+      </div>
+    </header>
+
+    <main class="content-wrap">
+      <section class="hero-card" id="resumen">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-rule"></span> LOS INTOCABLES / CLUB OFICIAL</p>
+          <div class="hero-kicker">FÚTBOL CLUB · FC 27</div><h1 id="club-title">LOS INTOCABLES</h1>
+          <p id="subtitle" class="hero-text">Rendimiento, resultados y estadísticas del club con una presentación limpia y profesional.</p>
+          <div class="hero-actions"><a href="#partidos" class="hero-cta">VER RESULTADOS <span>↗</span></a><a href="#fichas" class="hero-secondary">CONOCE LA PLANTILLA <span>→</span></a></div><div class="hero-meta">
+            <div class="hero-meta-item">
+              <span class="meta-label">Estado</span>
+              <strong id="updated">Actualizando…</strong>
+            </div>
+            <div class="hero-meta-item">
+              <span class="meta-label">Competición</span>
+              <strong>Clubes · FC 27</strong>
+            </div>
+          </div>
+          <div id="announcement" class="announcement hidden"></div>
+        </div>
+        <div class="hero-aside"><div class="hero-neon-caption">NO SOMOS UNO MÁS <span>· FC 27</span></div>
+          <div class="crest-frame" id="crest-frame">
+            <img id="crest" class="crest" src="/static/escudo-intocables.webp" alt="Escudo del club">
+          </div>
+          <div class="identity-card">
+            <span class="meta-label">Identidad</span>
+            <strong>Los Intocables</strong>
+            <small>Competir. Dominar. Ganar.</small>
+          </div>
+        </div>
+      </section>
+
+      <div class="ticker-bar" aria-label="Resumen del club"><span class="ticker-label">CLUB / LIVE</span><div class="ticker-copy">LA HISTORIA SE ESCRIBE EN EL CAMPO <span class="ticker-separator">✳</span> CADA PARTIDO CUENTA <span class="ticker-separator">✳</span> LOS INTOCABLES</div><span class="ticker-edition">EA FC 27</span></div>
+
+      <section class="homepage-heading" aria-label="Rendimiento general"><div><span class="section-index">01 / ESTADÍSTICAS</span><h2>El club, <em>en números.</em></h2></div><p>Rendimiento actualizado desde la API de FC 27. Sin resultados inventados.</p></section>
+      <section class="kpi-grid">
+        <article class="kpi-card">
+          <span class="kpi-label">Partidos</span>
+          <strong id="games">—</strong>
+          <small>Disputados</small>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-label">Victorias</span>
+          <strong id="wins">—</strong>
+          <small>Total ganado</small>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-label">Goles a favor</span>
+          <strong id="goals">—</strong>
+          <small>Producción ofensiva</small>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-label">Skill rating</span>
+          <strong id="rating">—</strong>
+          <small>Nivel competitivo</small>
+        </article>
+      </section>
+
+      <section class="homepage-heading"><div><span class="section-index">02 / COMPETICIÓN</span><h2>Así <em>competimos.</em></h2></div><p>Los últimos encuentros y el balance competitivo del equipo.</p></section>
+      <section class="two-column-layout">
+        <section class="panel-card" id="partidos">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">PARTIDOS</p>
+              <h2>Últimos resultados</h2>
+            </div>
+            <span class="panel-chip">LIVE FEED</span>
+          </div>
+          <div class="match-form-line" id="recent-form" aria-label="Forma reciente"></div><div id="matches" class="matches-list">
+            <div class="empty-state">Cargando partidos…</div>
+          </div>
+        </section>
+
+        <aside class="stack-column">
+          <section class="panel-card compact-card">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">BALANCE</p>
+                <h2>Resumen del club</h2>
+              </div>
+            </div>
+            <div class="record-ring-wrap">
+              <div class="record-ring"><span id="winpct">—</span></div>
+              <div class="record-copy">
+                <strong>Porcentaje de victorias</strong>
+                <p>Ratio competitivo del equipo sobre el total de partidos registrados.</p>
+              </div>
+            </div>
+            <div class="record-bars">
+              <div class="record-row"><span>Victorias</span><div class="bar"><div id="winbar"></div></div><strong id="record-w">—</strong></div>
+              <div class="record-row"><span>Empates</span><div class="bar alt"><div id="drawbar"></div></div><strong id="record-d">—</strong></div>
+              <div class="record-row"><span>Derrotas</span><div class="bar danger"><div id="lossbar"></div></div><strong id="record-l">—</strong></div>
+            </div>
+          </section>
+
+          <section class="panel-card compact-card">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">HIGHLIGHTS</p>
+                <h2>Indicadores</h2>
+              </div>
+            </div>
+            <div class="mini-grid">
+              <div><span>Goles en contra</span><strong id="against">—</strong></div>
+              <div><span>Diferencia</span><strong id="diff">—</strong></div>
+              <div><span>Mejor división</span><strong id="best-division">—</strong></div>
+              <div><span>Promociones</span><strong id="promotions">—</strong></div>
+            </div>
+          </section>
+        </aside>
+      </section>
+
+      <section class="homepage-heading"><div><span class="section-index">03 / EQUIPO</span><h2>Los que <em>marcan la diferencia.</em></h2></div><p>Datos acumulados de la plantilla y líderes estadísticos.</p></section>
+      <section class="three-column-layout" id="ranking">
+        <section class="panel-card main-table-card" id="plantilla">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">PLANTILLA</p>
+              <h2>Jugadores y estadísticas</h2>
+            </div>
+            <span class="panel-chip">DATOS ACUMULADOS</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Jugador</th>
+                  <th>Pos.</th>
+                  <th>PJ</th>
+                  <th>Goles</th>
+                  <th>Asist.</th>
+                  <th>Valoración</th>
+                </tr>
+              </thead>
+              <tbody id="players">
+                <tr><td colspan="6" class="empty-state">Cargando jugadores…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">Las estadísticas de jugadores mostradas aquí son acumuladas del club. No se presentan como estadísticas individuales de cada encuentro.</p>
+        </section>
+
+        <aside class="panel-card ranking-card">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">GOLEADORES</p>
+              <h2>Top de goles</h2>
+            </div>
+          </div>
+          <div id="top-scorers" class="ranking-list">
+            <div class="empty-state">Cargando ranking…</div>
+          </div>
+        </aside>
+
+        <aside class="panel-card ranking-card">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">ASISTENCIAS</p>
+              <h2>Top de asistencias</h2>
+            </div>
+          </div>
+          <div id="top-assists" class="ranking-list">
+            <div class="empty-state">Cargando ranking…</div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="panel-card squad-section" id="fichas">
+        <div class="panel-head"><div><p class="eyebrow">VESTUARIO</p><h2>Conoce a la plantilla</h2></div><span class="panel-chip">LOS INTOCABLES</span></div>
+        <p class="section-intro">La identidad del equipo, jugador a jugador. Las fotos, dorsales y posiciones se personalizan desde administración.</p>
+        <div id="player-cards" class="player-card-grid"><div class="empty-state">Cargando fichas…</div></div>
+      </section>
+
+      <footer class="site-footer">
+        <div>
+          <strong>Los Intocables</strong>
+          <span>Plataforma del club · FC 27</span>
+        </div>
+        <p>Diseño limpio, centrado en datos reales y preparado para evolucionar con nuevas secciones.</p>
+      </footer>
+    </main>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
