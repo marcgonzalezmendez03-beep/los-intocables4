@@ -6,7 +6,7 @@ const value = (o, ...keys) => {
 };
 const n = x => Number(x) || 0;
 const show = x => x === null || x === undefined || x === '' ? '—' : x;
-const safeUrl = u => { try { const x = new URL(u); return ['http:','https:'].includes(x.protocol) ? x.href : null; } catch { return null; } };
+const safeUrl = u => { try { const x = new URL(u, location.origin); return ['http:','https:'].includes(x.protocol) ? x.href : null; } catch { return null; } };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dateText = input => {
   if (!input) return 'Fecha no disponible';
@@ -123,15 +123,16 @@ function render(data){
   if (!list.length) {
     matches.innerHTML = '<div class="empty-state">No hay partidos disponibles todavía.</div>';
   } else {
-    list.forEach(m => {
+    list.forEach((m, index) => {
       const info = resultInfo(value(m,'result'));
       const card = document.createElement('article');
       card.className = 'match-card match-clickable';
       const mid = value(m,'matchId','match_id');
-      if (mid !== null && mid !== undefined && mid !== '') {
+      const detailUrl = '/partidos/' + encodeURIComponent(mid !== null && mid !== undefined && mid !== '' ? String(mid) : 'recent-' + index);
+      if (true) {
         card.tabIndex = 0; card.setAttribute('role','link');
         card.setAttribute('aria-label', 'Ver detalles del partido contra ' + (value(m,'opponentName','opponent') || 'rival'));
-        card.addEventListener('click', () => location.href = '/partidos/' + encodeURIComponent(mid));
+        card.addEventListener('click', () => location.href = detailUrl);
         card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') {e.preventDefault();card.click();} });
       }
       card.innerHTML = `
@@ -142,7 +143,7 @@ function render(data){
         </div>
         <div class="match-score">
           <strong>${show(value(m,'goals'))} - ${show(value(m,'goalsAgainst','goalsagainst'))}</strong>
-          <small>${mid ? 'Ver partido →' : (value(m,'dnf') ? 'DNF detectado' : 'Marcador final')}</small>
+          <small>Ver partido →</small>
         </div>
       `;
       matches.append(card);
@@ -152,6 +153,8 @@ function render(data){
   const players = $('players');
   players.replaceChildren();
   let members = Array.isArray(data.members) ? data.members.slice() : [];
+  const profiles = data.player_profiles || {};
+  members = members.filter(p => !profiles[String(value(p,'playerName','name','personaName','persona','player') || '').trim()]?.hidden);
   members.sort((a,b) => n(value(b,'goals')) - n(value(a,'goals')) || n(value(b,'assists')) - n(value(a,'assists')));
   if (!members.length) {
     players.innerHTML = '<tr><td colspan="6" class="empty-state">No hay jugadores disponibles.</td></tr>';

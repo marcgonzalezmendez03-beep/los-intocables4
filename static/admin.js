@@ -57,6 +57,13 @@ async function loadProfiles(){
         const input=document.createElement('input');input.name=name;input.value=value; input.maxLength=name==='number'?3:name==='position'?20:name==='display_name'?80:1000;
         wrapper.append(input);grid.append(wrapper);
       });
+      const visible=document.createElement('label'); visible.className='profile-visibility';
+      const hidden=document.createElement('input');hidden.type='checkbox';hidden.name='hidden';hidden.checked=Boolean(c.hidden);
+      visible.append(hidden,document.createTextNode(' Ocultar este jugador de la plantilla pública y rankings'));
+      grid.append(visible);
+      const photoLabel=document.createElement('label');photoLabel.textContent='O subir foto desde tu ordenador (JPG, PNG, WEBP, GIF · máx. 3 MB)';
+      const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='image/jpeg,image/png,image/webp,image/gif';photoLabel.append(fileInput);grid.append(photoLabel);
+      if (c.photo_url) { const preview=document.createElement('img');preview.src=c.photo_url;preview.alt='Foto actual';preview.className='admin-photo-preview';grid.append(preview); }
       form.append(grid);
       const actions=document.createElement('div');actions.className='form-actions';
       const button=document.createElement('button');button.className='primary-button';button.type='submit';button.textContent='Guardar ficha';
@@ -65,11 +72,23 @@ async function loadProfiles(){
       form.addEventListener('submit', async e=>{
         e.preventDefault(); button.disabled=true;info.textContent='Guardando…';
         const values=Object.fromEntries(new FormData(form));
+        values.hidden=hidden.checked;
+        // La imagen local se guarda en la base de datos del servidor; la URL se puede usar alternativamente.
+        delete values.hidden_if_unused;
         try {
+          if (fileInput.files.length) {
+            const file=fileInput.files[0];
+            if (file.size>3*1024*1024) throw new Error('La foto supera 3 MB.');
+            if (!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type)) throw new Error('Formato no admitido.');
+            const encoded=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file);});
+            const upload=await fetch('/api/admin/player/photo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({player_key:key,filename:file.name,image_base64:encoded})});
+            if (!upload.ok) throw new Error((await upload.json()).detail || 'No se pudo subir la foto.');
+            values.photo_url=(await upload.json()).photo_url;
+          }
           const response=await fetch('/api/admin/player',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({player_key:key,...values})});
           const result=await response.json();
           info.textContent=response.ok?'Ficha guardada.':(result.detail || 'No se pudo guardar.');
-        } catch { info.textContent='Error de conexión.'; }
+        } catch(err) { info.textContent=err.message || 'Error de conexión.'; }
         button.disabled=false;
       });
       root.append(form);

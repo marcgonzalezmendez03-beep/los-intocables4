@@ -300,3 +300,12 @@ input:focus,textarea:focus{border-color:var(--accent)}
 /* Fichas de partido */
 .match-clickable{cursor:pointer;transition:transform .18s,border-color .18s,background .18s}
 .match-clickable:hover,.match-clickable:focus-visible{transform:translateY(-2px);border-color:#e6ff00!important;outline:2px solid transparent;background:#19231a}
+
+/* Los partidos son enlaces interactivos */
+.match-clickable { cursor:pointer; position:relative; }
+.match-clickable:hover { outline:2px solid #dfff35; outline-offset:2px; }
+.match-clickable:focus-visible { outline:3px solid #dfff35; outline-offset:3px; }
+
+.profile-visibility{display:flex!important;align-items:center;gap:10px;font-weight:700;color:#e6ff00;grid-column:1/-1}
+.profile-visibility input{width:19px;height:19px;accent-color:#e6ff00}
+.admin-photo-preview{max-width:105px;max-height:105px;object-fit:cover;border-radius:12px;border:1px solid #e6ff00}

@@ -1,11 +1,11 @@
-import asyncio, json, logging, os, secrets, sqlite3
+import asyncio, json, logging, os, secrets, sqlite3, base64, binascii
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
@@ -40,6 +40,7 @@ def normalized(obj):
 def db():
     conn = sqlite3.connect(DB_PATH)
     conn.execute('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)')
+    conn.execute('CREATE TABLE IF NOT EXISTS player_photos (player_key TEXT PRIMARY KEY, content BLOB NOT NULL, mime TEXT NOT NULL)')
     conn.execute('CREATE TABLE IF NOT EXISTS match_archive (match_id TEXT PRIMARY KEY, payload TEXT NOT NULL, saved_at TEXT NOT NULL)')
     return conn
 
@@ -104,10 +105,20 @@ async def club_data():
     with lock: snapshot = json.loads(json.dumps(state))
     return {**snapshot, 'customization': get_settings(), 'player_profiles': get_player_profiles()}
 
+def ensure_player_profiles(conn):
+    conn.execute("CREATE TABLE IF NOT EXISTS player_profiles (player_key TEXT PRIMARY KEY, display_name TEXT NOT NULL DEFAULT '', number TEXT NOT NULL DEFAULT '', position TEXT NOT NULL DEFAULT '', photo_url TEXT NOT NULL DEFAULT '', hidden INTEGER NOT NULL DEFAULT 0)")
+    columns = {row[1] for row in conn.execute('PRAGMA table_info(player_profiles)')}
+    if 'hidden' not in columns:
+        conn.execute('ALTER TABLE player_profiles ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0')
+
 def get_player_profiles():
     with db() as conn:
-        conn.execute("CREATE TABLE IF NOT EXISTS player_profiles (player_key TEXT PRIMARY KEY, display_name TEXT NOT NULL DEFAULT '', number TEXT NOT NULL DEFAULT '', position TEXT NOT NULL DEFAULT '', photo_url TEXT NOT NULL DEFAULT '')")
-        return {key: {'display_name': name, 'number': number, 'position': position, 'photo_url': photo} for key, name, number, position, photo in conn.execute('SELECT player_key,display_name,number,position,photo_url FROM player_profiles')}
+        ensure_player_profiles(conn)
+        result = {}
+        for key, name, number, position, photo, hidden in conn.execute('SELECT player_key,display_name,number,position,photo_url,hidden FROM player_profiles'):
+            result[key] = {'display_name': name, 'number': number, 'position': position,
+                           'photo_url': photo, 'hidden': bool(hidden)}
+        return result
 
 class PlayerProfilePayload(BaseModel):
     player_key: str = Field(min_length=1, max_length=150)
@@ -115,6 +126,7 @@ class PlayerProfilePayload(BaseModel):
     number: str = Field(default='', max_length=3)
     position: str = Field(default='', max_length=20)
     photo_url: str = Field(default='', max_length=1000)
+    hidden: bool = False
 
 @app.put('/api/admin/player')
 async def save_player_profile(request: Request, payload: PlayerProfilePayload):
@@ -126,9 +138,51 @@ async def save_player_profile(request: Request, payload: PlayerProfilePayload):
         if parsed.scheme not in ('https', 'http') or not parsed.netloc:
             raise HTTPException(422, 'La foto debe ser una URL http(s) válida')
     with db() as conn:
-        conn.execute("CREATE TABLE IF NOT EXISTS player_profiles (player_key TEXT PRIMARY KEY, display_name TEXT NOT NULL DEFAULT '', number TEXT NOT NULL DEFAULT '', position TEXT NOT NULL DEFAULT '', photo_url TEXT NOT NULL DEFAULT '')")
-        conn.execute('INSERT OR REPLACE INTO player_profiles(player_key,display_name,number,position,photo_url) VALUES (?,?,?,?,?)', (payload.player_key, payload.display_name, payload.number, payload.position, payload.photo_url))
+        ensure_player_profiles(conn)
+        conn.execute('INSERT OR REPLACE INTO player_profiles(player_key,display_name,number,position,photo_url,hidden) VALUES (?,?,?,?,?,?)',
+                     (payload.player_key, payload.display_name, payload.number, payload.position, payload.photo_url, int(payload.hidden)))
     return {'ok': True}
+
+class PhotoPayload(BaseModel):
+    player_key: str = Field(min_length=1, max_length=150)
+    filename: str = Field(min_length=1, max_length=255)
+    image_base64: str = Field(min_length=1, max_length=4500000)
+
+def photo_type(data):
+    if data.startswith(b'\\x89PNG\\r\\n\\x1a\\n'): return 'image/png'
+    if data.startswith(b'\\xff\\xd8\\xff'): return 'image/jpeg'
+    if data.startswith(b'RIFF') and data[8:12] == b'WEBP': return 'image/webp'
+    if data.startswith((b'GIF87a', b'GIF89a')): return 'image/gif'
+    return None
+
+@app.post('/api/admin/player/photo')
+async def upload_player_photo(request: Request, payload: PhotoPayload):
+    if not is_admin(request):
+        raise HTTPException(403, 'Acceso restringido')
+    try:
+        raw = base64.b64decode(payload.image_base64, validate=True)
+    except (binascii.Error, ValueError):
+        raise HTTPException(422, 'Imagen no válida')
+    mime = photo_type(raw)
+    if not mime or len(raw) > 3 * 1024 * 1024:
+        raise HTTPException(422, 'Sube una imagen JPG, PNG, WEBP o GIF de máximo 3 MB')
+    with db() as conn:
+        conn.execute('INSERT OR REPLACE INTO player_photos(player_key,content,mime) VALUES (?,?,?)',
+                     (payload.player_key, raw, mime))
+        ensure_player_profiles(conn)
+        conn.execute('INSERT OR IGNORE INTO player_profiles(player_key) VALUES (?)', (payload.player_key,))
+        conn.execute("UPDATE player_profiles SET photo_url=? WHERE player_key=?", ('/api/player-photo/' + payload.player_key, payload.player_key))
+    return {'ok': True, 'photo_url': '/api/player-photo/' + payload.player_key}
+
+@app.get('/api/player-photo/{player_key:path}')
+async def player_photo(player_key: str):
+    if not player_key or len(player_key) > 150:
+        raise HTTPException(404)
+    with db() as conn:
+        row = conn.execute('SELECT content,mime FROM player_photos WHERE player_key=?', (player_key,)).fetchone()
+    if not row:
+        raise HTTPException(404, 'Foto no encontrada')
+    return Response(content=row[0], media_type=row[1], headers={'Cache-Control': 'no-store'})
 
 
 @app.get('/partidos/{match_id}', response_class=HTMLResponse)
@@ -143,6 +197,13 @@ async def match_data(match_id: str):
         raise HTTPException(404, 'Partido no encontrado')
     with lock:
         matches = list(state.get('matches') or [])
+    if match_id.startswith('recent-'):
+        try:
+            idx = int(match_id.removeprefix('recent-'))
+            if 0 <= idx < len(matches) and isinstance(matches[idx], dict):
+                return {'match': matches[idx], 'club_name': CLUB_NAME, 'source': 'recent'}
+        except ValueError:
+            pass
     for match in matches:
         if isinstance(match, dict) and str(match.get('matchId') or match.get('match_id') or '') == match_id:
             return {'match': match, 'club_name': CLUB_NAME, 'source': 'recent'}
