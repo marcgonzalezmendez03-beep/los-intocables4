@@ -125,16 +125,12 @@ function render(data){
   } else {
     list.forEach((m, index) => {
       const info = resultInfo(value(m,'result'));
-      const card = document.createElement('article');
+      const card = document.createElement('a');
       card.className = 'match-card match-clickable';
       const mid = value(m,'matchId','match_id');
       const detailUrl = '/partidos/' + encodeURIComponent(mid !== null && mid !== undefined && mid !== '' ? String(mid) : 'recent-' + index);
-      if (true) {
-        card.tabIndex = 0; card.setAttribute('role','link');
-        card.setAttribute('aria-label', 'Ver detalles del partido contra ' + (value(m,'opponentName','opponent') || 'rival'));
-        card.addEventListener('click', () => location.href = detailUrl);
-        card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') {e.preventDefault();card.click();} });
-      }
+      card.href = detailUrl;
+      card.setAttribute('aria-label', 'Ver detalles del partido contra ' + (value(m,'opponentName','opponent') || 'rival'));
       card.innerHTML = `
         <div class="match-result ${info.cls}">${info.short}</div>
         <div class="match-main">

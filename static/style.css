@@ -309,3 +309,5 @@ input:focus,textarea:focus{border-color:var(--accent)}
 .profile-visibility{display:flex!important;align-items:center;gap:10px;font-weight:700;color:#e6ff00;grid-column:1/-1}
 .profile-visibility input{width:19px;height:19px;accent-color:#e6ff00}
 .admin-photo-preview{max-width:105px;max-height:105px;object-fit:cover;border-radius:12px;border:1px solid #e6ff00}
+
+a.match-card.match-clickable{display:flex;text-decoration:none;color:inherit;cursor:pointer;position:relative;z-index:1}a.match-card.match-clickable:hover{outline:2px solid #e6ff00;outline-offset:2px}a.match-card.match-clickable:focus-visible{outline:3px solid #e6ff00;outline-offset:3px}
