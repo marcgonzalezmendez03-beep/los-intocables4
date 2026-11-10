@@ -3,3 +3,12 @@ site.db
 __pycache__/
 *.pyc
 .venv/
+
+*.db
+*.db-shm
+*.db-wal
+data.json
+last_posted_match.txt
+bot_fc27/.env
+bot_fc27/data.json
+bot_fc27/last_posted_match.txt

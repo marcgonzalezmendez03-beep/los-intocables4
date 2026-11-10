@@ -1,0 +1,23 @@
+[
+  {
+    "slug": "vpg-quinta",
+    "nombre": "VPG División 5C",
+    "pagina_de_referencia": "https://eafcstats.es/competitions/294",
+    "url": "",
+    "format": "csv"
+  },
+  {
+    "slug": "vpg-bronze-zero",
+    "nombre": "VPG Zero Bronze",
+    "pagina_de_referencia": "https://eafcstats.es/competitions/301",
+    "url": "",
+    "format": "ics"
+  },
+  {
+    "slug": "afj-cuarta",
+    "nombre": "AFJ División 4A",
+    "pagina_de_referencia": "https://www.eafcstats.es/competitions",
+    "url": "",
+    "format": "json"
+  }
+]

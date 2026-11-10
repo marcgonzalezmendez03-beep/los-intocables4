@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: los-intocables-fc27
+    name: los-intocables-hub
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
@@ -13,11 +13,15 @@ services:
         value: Los Intocables
       - key: REFRESH_MINUTES
         value: '5'
+      - key: DATA_SOURCE
+        value: auto
       - key: COOKIE_SECURE
         value: 'true'
       - key: ADMIN_USER
         sync: false
       - key: ADMIN_PASSWORD
+        sync: false
+      - key: HUB_SYNC_TOKEN
         sync: false
       - key: SESSION_SECRET
         generateValue: true

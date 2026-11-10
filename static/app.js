@@ -135,7 +135,7 @@ function render(data){
         <div class="match-result ${info.cls}">${info.short}</div>
         <div class="match-main">
           <strong>${esc(value(m,'opponentName','opponent') || 'Rival no disponible')}</strong>
-          <div class="match-meta">${info.label} · ${esc(dateText(value(m,'timestamp','date')))}${value(m,'matchType') ? ' · ' + esc(value(m,'matchType')) : ''}</div>
+          <div class="match-meta">${info.label} · ${esc(dateText(value(m,'timestamp','date')))}${(data.match_labels||{})[String(mid)]?.label ? ' · ' + esc((data.match_labels||{})[String(mid)].label) : value(m,'matchType') ? ' · ' + esc(value(m,'matchType')) : ''}</div>
         </div>
         <div class="match-score">
           <strong>${show(value(m,'goals'))} - ${show(value(m,'goalsAgainst','goalsagainst'))}</strong>

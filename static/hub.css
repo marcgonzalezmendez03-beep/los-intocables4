@@ -1,0 +1,60 @@
+/* LOS INTOCABLES HUB: nueva capa visual sin romper la web original */
+:root{--accent:#dfff38;--panel:#121820;--line:#273139}
+.site-header{box-shadow:0 8px 40px #0006}
+.site-header .brand-mark{overflow:hidden}
+.brand-mark img{width:100%;height:100%;object-fit:contain}
+.main-nav a[aria-current="page"]{color:var(--accent)}
+.hub-subpage{padding-top:38px}
+.hub-title{position:relative;overflow:hidden;min-height:260px;padding:55px 54px 45px;border:1px solid #303c35;border-radius:24px;background:radial-gradient(circle at 80% 25%,#39471f,transparent 40%),linear-gradient(125deg,#1d2528,#0b1013 76%)}
+.hub-title:after{content:"FC 27";position:absolute;right:-3px;bottom:-35px;opacity:.06;font-size:210px;font-weight:900;line-height:1;letter-spacing:-.07em;pointer-events:none}
+.hub-title h1{max-width:880px;font-size:clamp(44px,6vw,92px);letter-spacing:-.065em;line-height:1.02;margin:24px 0 18px;font-weight:900}
+.hub-title h1 em{color:var(--accent);font-style:normal}
+.hub-title p{position:relative;max-width:660px;font-size:16px;line-height:1.65;color:var(--muted);z-index:1}
+.hub-split{display:grid;grid-template-columns:1.2fr .8fr;gap:20px}
+.hub-league-list{display:grid;gap:9px}
+.hub-leagues-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.hub-league-card{min-width:0;background:linear-gradient(145deg,#192129,#111720);border:1px solid #2e3944;border-radius:17px;padding:23px;display:flex;flex-direction:column;gap:10px;min-height:177px;transition:transform .18s,border-color .18s}
+.hub-league-card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.hub-mini-label{font-size:11px;color:var(--accent);font-weight:800;letter-spacing:.15em;text-transform:uppercase}
+.hub-league-card h3{font-size:24px;line-height:1.1;margin:4px 0;font-weight:800;letter-spacing:-.03em}
+.hub-league-card p{font-size:13px;color:var(--muted);line-height:1.5;flex:1;margin:0}
+.hub-league-bottom{margin-top:auto;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.hub-league-bottom a,.hub-text-link{color:var(--accent);font-size:13px;font-weight:750}
+.hub-fixture-list{display:grid;gap:10px}
+.hub-fixture{display:flex;align-items:center;gap:18px;background:#1a2028;border:1px solid #2b3541;padding:17px 18px;border-radius:12px}
+.hub-fixture-date{min-width:135px;font-size:13px;font-weight:800;color:#f5f7f7}
+.hub-fixture-date small,.hub-fixture-teams small{display:block;font-size:12px;color:var(--muted);margin-top:4px;font-weight:400}
+.hub-fixture-teams{flex:1;min-width:0}
+.hub-fixture-teams strong{font-weight:750;font-size:14px}
+.hub-fixture-teams strong span{color:var(--accent);font-size:11px;padding:0 4px}
+.hub-fixture-badge{border-radius:6px;background:#dfff381a;border:1px solid #dfff383b;font-size:10px;letter-spacing:.1em;color:var(--accent);padding:7px 9px;font-weight:900}
+.hub-empty,.hub-info-note{border:1px dashed #46503f;background:#151c20;color:var(--muted);padding:23px;border-radius:12px;font-size:14px;line-height:1.6}
+.hub-info-note{margin-top:28px}.hub-info-note a{color:var(--accent)}
+.hub-join{display:flex;justify-content:space-between;align-items:center;gap:25px;padding:40px;margin-top:55px;border:1px solid #5b6836;border-radius:20px;background:linear-gradient(120deg,#222b1d,#13191c 68%)}
+.hub-join h2{font-size:clamp(26px,3vw,41px);line-height:1.1;margin:13px 0;font-weight:900;letter-spacing:-.05em}
+.hub-join p:not(.eyebrow){color:var(--muted)}
+.hub-join .hero-cta{white-space:nowrap}
+.hub-schedule-panel{padding:24px}
+.hub-recruit-layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:22px;margin-top:32px}
+.hub-apply-card{padding:30px}.hub-apply-form{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:25px}
+.hub-apply-form label,.hub-admin-block label{display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--muted);font-weight:600}
+.hub-apply-form input,.hub-apply-form select,.hub-apply-form textarea,.hub-admin-block input,.hub-admin-block textarea,.hub-admin-block select{min-width:0;width:100%;background:#0e141a;border:1px solid #34404d;border-radius:10px;color:#f4f7fa;padding:12px 13px;outline:0}
+.hub-apply-form input:focus,.hub-apply-form textarea:focus,.hub-apply-form select:focus,.hub-admin-block input:focus,.hub-admin-block select:focus{border-color:var(--accent)}
+.full-width{grid-column:1/-1}.honeypot{position:absolute!important;left:-9999px!important;height:0!important;overflow:hidden!important}
+.hub-recruit-side{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:45px 36px;border:1px solid #36432a;border-radius:19px;background:radial-gradient(circle at 50% 26%,#394b26,#11181a 60%)}
+.hub-recruit-side img{width:160px;height:160px;object-fit:contain;align-self:center;filter:drop-shadow(0 12px 28px #0009);margin-bottom:25px}
+.hub-recruit-side h2{font-size:35px;line-height:1.12;letter-spacing:-.05em;margin:15px 0}
+.hub-recruit-side p{color:var(--muted);line-height:1.6;font-size:14px}
+.hub-recruit-side .hub-text-link{margin-top:20px}
+.hub-admin-block{margin-top:26px}.hub-admin-list{display:grid;gap:10px;margin-top:22px}
+.hub-admin-entry{background:#171e27;border:1px solid #303b49;border-radius:12px;padding:16px}
+.hub-admin-entry .hub-admin-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.hub-admin-entry h3{margin:4px 0;font-size:15px}.hub-admin-entry small{color:var(--muted)}
+.hub-admin-entry button{border-radius:9px;border:1px solid #58644a;background:#273329;color:#e5f4c3;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:700}
+.hub-admin-entry button.danger{background:#3d2227;border-color:#70393f;color:#ffc7cc}
+.hub-admin-entry select{width:auto;max-width:210px;padding:8px}
+.hub-comp-edit{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.hub-comp-edit button{justify-self:start}
+.hub-admin-notice{color:var(--accent);font-size:13px;margin-top:6px}
+@media(max-width:1100px){.hub-leagues-grid{grid-template-columns:repeat(2,1fr)}.hub-split,.hub-recruit-layout{grid-template-columns:1fr}.site-header{flex-wrap:wrap}.main-nav{order:3;width:100%;flex:unset;justify-content:flex-start;overflow:auto;white-space:nowrap}.hub-join{align-items:flex-start;flex-direction:column}}
+@media(max-width:650px){.hub-title{padding:32px 24px;min-height:230px}.hub-title h1{font-size:42px}.hub-leagues-grid{grid-template-columns:1fr}.hub-fixture{align-items:flex-start;flex-wrap:wrap}.hub-fixture-date{min-width:0}.hub-fixture-badge{margin-left:auto}.hub-apply-form,.hub-comp-edit{grid-template-columns:1fr}.hub-recruit-side{padding:30px}.hub-join{padding:25px}.hub-apply-card{padding:19px}}
