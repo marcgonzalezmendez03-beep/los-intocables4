@@ -72,10 +72,34 @@ def fetch():
     if api is None:
         raise RuntimeError('fc-clubs-api no está instalado: instala requirements.txt o usa DATA_SOURCE=bot')
     club_id = api.find_club_id(CLUB_NAME)
+    # Las ligas externas VPG/AFJ se juegan normalmente como amistosos de clubes.
+    # El valor por defecto de get_club_matches() es leagueMatch (divisiones de EA),
+    # de ahí que antes no aparecieran los partidos de las ligas externas.
+    all_matches = {}
+    failures = []
+    for match_type in ('friendlyMatch', 'leagueMatch', 'playoffMatch'):
+        try:
+            rows = normalized(api.get_club_matches(club_id, match_type=match_type, count=10))
+            if not isinstance(rows, list):
+                continue
+            for m in rows:
+                if not isinstance(m, dict):
+                    continue
+                item = {**m, 'matchType': match_type}
+                mid = item.get('matchId') or item.get('match_id')
+                if mid is not None:
+                    all_matches[str(mid)] = item
+        except Exception as exc:
+            failures.append(f'{match_type}: {type(exc).__name__}: {exc}')
+    if failures:
+        logger.warning('Consulta parcial de partidos FC27: %s', '; '.join(failures))
+    if not all_matches and len(failures) == 3:
+        logger.warning('La API no devolvió partidos; la web mostrará el archivo histórico disponible')
+    from match_explorer import date_score
+    matches = sorted(all_matches.values(), key=lambda m: date_score(m.get('timestamp') or m.get('date')), reverse=True)
     return normalized({'club_id': club_id, 'club': api.get_club_details(club_id),
       'overall': api.get_club_overall_stats(club_id), 'members': api.get_member_stats(club_id),
-      'matches': api.get_club_matches(club_id, count=30),
-      'updated_at': datetime.now(timezone.utc).isoformat(), 'error': None})
+      'matches': matches, 'updated_at': datetime.now(timezone.utc).isoformat(), 'error': None})
 
 async def refresh():
     if DATA_SOURCE == 'bot':

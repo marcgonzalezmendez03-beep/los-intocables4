@@ -250,6 +250,9 @@ def prepare(conn):
         fixture_uid TEXT NOT NULL, minutes_difference INTEGER NOT NULL, detected_at TEXT NOT NULL)''')
     conn.execute('''CREATE TABLE IF NOT EXISTS auto_sources (
         source TEXT PRIMARY KEY, last_success TEXT, error TEXT, count INTEGER NOT NULL DEFAULT 0)''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS slot_hints (
+        match_id TEXT PRIMARY KEY, opponent TEXT NOT NULL, played_at TEXT NOT NULL,
+        choices TEXT NOT NULL, detected_at TEXT NOT NULL)''')
 
 
 def game_records(conn, state):
@@ -281,7 +284,8 @@ def game_records(conn, state):
         when = parse_dt(pick(match,'timestamp','date','created_at','matchDate'))
         rival = pick(match,'opponentName','opponent','opponent_name','rival')
         if when and rival and normalize(rival) not in ('rival','rival no identificado','unknown'):
-            result.append({'id':mid,'opponent':str(rival),'when':when})
+            result.append({'id':mid,'opponent':str(rival),'when':when,
+                           'match_type':str(pick(match,'matchType','match_type') or '')})
     return result
 
 
@@ -303,6 +307,37 @@ def scheduled_slot(dt, slug, tolerance_minutes=15):
     here = dt.astimezone(TZ)
     actual = here.hour*60 + here.minute
     return any(abs(actual - (int(slot[:2])*60+int(slot[3:]))) <= tolerance_minutes for slot in slots)
+
+
+def slot_suggestions(game):
+    """Horarios candidatos, NO pruebas de liga oficial.
+
+    EA puede fechar el partido al inicio o al final. Preferimos el comienzo
+    anterior al timestamp, pero si se solapan varias ligas informamos ambas.
+    La confirmación solo se obtiene contra el rival de una jornada programada.
+    """
+    kind = str(game.get('match_type') or '').lower()
+    if kind in ('leaguematch', 'playoffmatch'):
+        return []  # Ligas internas de EA, no confundir con VPG y AFJ
+    when = game.get('when')
+    if when is None:
+        return []
+    here = when.astimezone(TZ)
+    minute = here.hour * 60 + here.minute
+    hints = []
+    for slug, slots in MATCH_SLOTS.items():
+        for slot in slots:
+            start = int(slot[:2]) * 60 + int(slot[3:])
+            delta = minute - start
+            # Se admiten unos minutos antes (reloj EA de inicio) y hasta
+            # media hora después (marcado al finalizar). No asumir certeza.
+            if -5 <= delta <= 29:
+                hints.append({'competition_slug': slug, 'name': DEFAULT_SLUGS[slug],
+                              'slot': slot, 'minutes_from_slot': delta})
+    hints.sort(key=lambda h: (0 if h['minutes_from_slot'] >= 0 else 1,
+                              abs(h['minutes_from_slot'] - 15) if h['minutes_from_slot'] >= 0 else abs(h['minutes_from_slot']),
+                              h['slot']))
+    return hints
 
 
 def match_candidates(match, fixtures, max_minutes=45):
@@ -364,7 +399,7 @@ def choose_auto(games, fixtures, max_minutes=45):
     return result, sorted(set(ambiguous))
 
 
-def install(app, *, db_provider, state_getter, club_name='Los Intocables', is_admin=None, interval_minutes=30):
+def install(app, *, db_provider, state_getter, club_name='Los Intocables', is_admin=None, interval_minutes=10):
     """Registrar API y tarea cada 30 minutos. Llamar tras instalar match_explorer."""
     mutex = asyncio.Lock()
     status = {'at':None, 'error':None, 'assigned':0, 'ambiguous':[], 'feeds':{}}
@@ -412,6 +447,28 @@ def install(app, *, db_provider, state_getter, club_name='Los Intocables', is_ad
             fixtures = manual + auto
             games = game_records(conn, state_getter() or {})
             assigned, ambiguous = choose_auto(games,fixtures)
+            # Clasificación de probables: visibles en la web pero NO se
+            # contabilizan como partidos de liga hasta cotejar el rival real.
+            # Guardar incluso si no tenemos calendarios, para dar diagnóstico.
+            confirmed_ids = {m['id'] for m, _, _ in assigned}
+            now = datetime.now(timezone.utc).isoformat()
+            for game in games:
+                mid = game['id']
+                if mid in confirmed_ids:
+                    conn.execute('DELETE FROM slot_hints WHERE match_id=?', (mid,))
+                    continue
+                # Las etiquetas del administrador tienen prioridad total.
+                manual_label = conn.execute('SELECT 1 FROM match_labels WHERE match_id=?', (mid,)).fetchone()
+                if manual_label:
+                    conn.execute('DELETE FROM slot_hints WHERE match_id=?', (mid,))
+                    continue
+                hints = slot_suggestions(game)
+                if hints:
+                    conn.execute('INSERT INTO slot_hints(match_id,opponent,played_at,choices,detected_at) VALUES (?,?,?,?,?) '
+                        'ON CONFLICT(match_id) DO UPDATE SET opponent=excluded.opponent,played_at=excluded.played_at,choices=excluded.choices,detected_at=excluded.detected_at',
+                        (mid, game['opponent'], utc_iso(game['when']), json.dumps(hints, ensure_ascii=False), now))
+                else:
+                    conn.execute('DELETE FROM slot_hints WHERE match_id=?', (mid,))
             total = 0
             for match, fixture, minutes in assigned:
                 mid, slug = match['id'], fixture['competition_slug']
@@ -424,6 +481,7 @@ def install(app, *, db_provider, state_getter, club_name='Los Intocables', is_ad
                 conn.execute('INSERT INTO match_labels(match_id,competition_slug,label) VALUES (?,?,?) ON CONFLICT(match_id) DO UPDATE SET competition_slug=excluded.competition_slug,label=excluded.label', (mid,slug,label))
                 conn.execute('INSERT INTO auto_assignments(match_id,competition_slug,label,fixture_uid,minutes_difference,detected_at) VALUES(?,?,?,?,?,?) ON CONFLICT(match_id) DO UPDATE SET competition_slug=excluded.competition_slug,label=excluded.label,fixture_uid=excluded.fixture_uid,minutes_difference=excluded.minutes_difference,detected_at=excluded.detected_at',
                              (mid,slug,label,fixture['uid'],minutes,datetime.now(timezone.utc).isoformat()))
+                conn.execute('DELETE FROM slot_hints WHERE match_id=?', (mid,))
                 total += 1
         status.update({'at':datetime.now(timezone.utc).isoformat(),'assigned':total,'ambiguous':ambiguous,'error':None})
         return total
@@ -453,12 +511,13 @@ def install(app, *, db_provider, state_getter, club_name='Los Intocables', is_ad
             rows=conn.execute('SELECT source,last_success,error,count FROM auto_sources').fetchall()
             auto=conn.execute('SELECT COUNT(*) FROM auto_assignments').fetchone()[0]
             fixtures_count=conn.execute('SELECT COUNT(*) FROM auto_fixtures').fetchone()[0]
+            hints_count=conn.execute('SELECT COUNT(*) FROM slot_hints').fetchone()[0]
             try:
                 manual_count=conn.execute('SELECT COUNT(*) FROM fixtures').fetchone()[0]
             except Exception:
                 manual_count=0
         configured = [s['slug'] for s in source_configs()]
-        return {'ok':True,'autoclasificados_total':auto,'calendarios_importados':fixtures_count,
+        return {'ok':True,'autoclasificados_total':auto,'candidatos_sin_confirmar':hints_count,'calendarios_importados':fixtures_count,
                 'calendario_panel':manual_count,'competiciones':competitions_catalog(configured),
                 'fuentes_configuradas':configured,
                 'fuentes':[{ 'slug':s,'last_success':ok,'error':error,'fixtures':n} for s,ok,error,n in rows],
@@ -469,9 +528,87 @@ def install(app, *, db_provider, state_getter, club_name='Los Intocables', is_ad
         with db_provider() as conn:
             prepare(conn)
             rows=conn.execute('SELECT a.match_id,a.competition_slug,a.label,a.minutes_difference,a.detected_at,l.label,l.competition_slug FROM auto_assignments a LEFT JOIN match_labels l ON l.match_id=a.match_id').fetchall()
-        # Si un administrador ha corregido el partido, reflejar la etiqueta oficial prevalente.
-        return {'matches':{mid: {'competition_slug':manual_slug or slug, 'label':manual_label or label,
-                'minutes_difference':minutes,'detected_at':detected_at,'source':('manual' if (manual_label,manual_slug)!=(label,slug) else 'auto')} for mid,slug,label,minutes,detected_at,manual_label,manual_slug in rows}}
+            hints=conn.execute('SELECT match_id,opponent,played_at,choices FROM slot_hints').fetchall()
+        data = {mid: {'competition_slug':manual_slug or slug, 'label':manual_label or label,
+                'minutes_difference':minutes,'detected_at':detected_at,'source':('manual' if (manual_label,manual_slug)!=(label,slug) else 'auto'),
+                'provisional':False} for mid,slug,label,minutes,detected_at,manual_label,manual_slug in rows}
+        for mid,opponent,played_at,choices in hints:
+            if mid in data:
+                continue
+            options=json.loads(choices)
+            unique={o['competition_slug'] for o in options}
+            # No fingir una liga si la ventana de tiempo admite varias.
+            only=options[0] if len(unique)==1 else None
+            data[mid]={'competition_slug':only['competition_slug'] if only else '',
+                       'label':('Posible '+only['name']) if only else 'Liga por verificar',
+                       'source':'horario','provisional':True,
+                       'possible_competitions':options, 'played_at':played_at}
+        return {'matches':data}
+
+    @app.get('/api/ligas/candidatos')
+    async def liga_candidates():
+        with db_provider() as conn:
+            prepare(conn)
+            rows=conn.execute('SELECT match_id,opponent,played_at,choices,detected_at FROM slot_hints ORDER BY played_at DESC LIMIT 250').fetchall()
+        return {'candidatos':[{'match_id':mid,'opponent':opp,'played_at':date,
+                               'opciones':json.loads(choices),'detected_at':detected}
+                              for mid,opp,date,choices,detected in rows],
+                'nota':'Los candidatos por horario no están confirmados hasta cruzar el rival con un calendario de liga'}
+
+    @app.post('/api/admin/ligas/candidatos/{match_id}/confirmar')
+    async def confirm_candidate(match_id: str, request: __import__('fastapi').Request):
+        if is_admin is None or not is_admin(request):
+            raise HTTPException(403, 'Solo administradores')
+        if len(match_id)>120:
+            raise HTTPException(422, 'ID inválido')
+        body=await request.json()
+        slug=body.get('competition_slug') if isinstance(body,dict) else None
+        if slug not in DEFAULT_SLUGS:
+            raise HTTPException(422, 'Competición no válida')
+        with db_provider() as conn:
+            prepare(conn)
+            row=conn.execute('SELECT choices FROM slot_hints WHERE match_id=?',(match_id,)).fetchone()
+            if not row or slug not in {c['competition_slug'] for c in json.loads(row[0])}:
+                raise HTTPException(404, 'Candidato no encontrado para esta competición')
+            conn.execute('INSERT INTO match_labels(match_id,competition_slug,label) VALUES (?,?,?) '
+                         'ON CONFLICT(match_id) DO UPDATE SET competition_slug=excluded.competition_slug,label=excluded.label',
+                         (match_id,slug,DEFAULT_SLUGS[slug]))
+            conn.execute('DELETE FROM slot_hints WHERE match_id=?',(match_id,))
+        return {'ok':True,'match_id':match_id,'competition_slug':slug,'source':'admin'}
+
+    @app.post('/api/admin/ligas/importar')
+    async def import_fixture_calendar(request: __import__('fastapi').Request):
+        """Importa CSV/JSON/ICS desde el panel sin depender de scraping de terceros."""
+        if is_admin is None or not is_admin(request):
+            raise HTTPException(403, 'Solo administradores')
+        if int(request.headers.get('content-length','0') or 0)>240000:
+            raise HTTPException(413,'Calendario demasiado grande')
+        body=await request.json()
+        slug=body.get('slug') if isinstance(body,dict) else None
+        content=body.get('content') if isinstance(body,dict) else None
+        fmt=body.get('format','csv') if isinstance(body,dict) else None
+        if slug not in DEFAULT_SLUGS or fmt not in ('csv','json','ics') or not isinstance(content,str) or len(content)>180000:
+            raise HTTPException(422,'Calendario inválido')
+        try:
+            parsed=parse_feed(content,fmt,slug,club_name)
+        except (ValueError, csv.Error, json.JSONDecodeError) as exc:
+            raise HTTPException(422, f'Formato inválido: {exc}')
+        if not parsed:
+            raise HTTPException(422,'No se encontraron fechas y rivales de Los Intocables en el calendario')
+        source='admin-import:'+slug
+        now=datetime.now(timezone.utc).isoformat()
+        with db_provider() as conn:
+            prepare(conn)
+            conn.execute('DELETE FROM auto_fixtures WHERE source=?',(source,))
+            for fixture in parsed:
+                uid=fixture_id(source,fixture)
+                conn.execute('INSERT INTO auto_fixtures(uid,source,competition_slug,opponent,starts_at,loaded_at) VALUES(?,?,?,?,?,?)',
+                             (uid,source,slug,fixture['opponent'],fixture['starts_at'],now))
+            conn.execute('INSERT INTO auto_sources(source,last_success,error,count) VALUES(?,?,?,?) '
+                         'ON CONFLICT(source) DO UPDATE SET last_success=excluded.last_success,error=NULL,count=excluded.count',
+                         (source,now,None,len(parsed)))
+        n=await asyncio.to_thread(classify)
+        return {'ok':True,'importados':len(parsed),'clasificados_en_revision':n,'competicion':DEFAULT_SLUGS[slug]}
 
     @app.post('/api/admin/ligas/recalcular')
     async def recalculate(request: __import__('fastapi').Request):

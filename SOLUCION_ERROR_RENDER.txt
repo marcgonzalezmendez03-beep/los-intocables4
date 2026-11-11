@@ -1,0 +1,15 @@
+SOLUCION AL ERROR: No matching distribution found for fc-clubs-api>=0.3.1
+
+VERSION CORRECTA: fc-clubs-api==0.3.0
+Se han corregido los archivos:
+  requirements.txt (raiz del proyecto)
+  bot_fc27/requirements.txt (bot independiente)
+
+IMPORTANTE: El ZIP se descomprime antes de subirlo a GitHub.
+En Render > Settings > Build Command para la web: pip install -r requirements.txt
+En Render > Settings > Root Directory para la web: vacio o raiz del repositorio
+En Render > Settings > Start Command para la web: uvicorn main:app --host 0.0.0.0 --port $PORT
+Si el servicio se despliega desde bot_fc27, usa su requirements.txt corregido.
+
+No es necesario modificar archivos Python ni JavaScript para esta correccion.
+El despliegue completo todavia debe comprobarse en los logs de Render.
