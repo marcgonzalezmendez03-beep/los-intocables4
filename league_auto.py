@@ -38,11 +38,19 @@ DEFAULT_SLUGS = {
 # Referencias de consulta aportadas por el responsable del club.
 # Una URL de referencia NO es un feed automatizado; solo url en calendarios_fuentes.json
 # habilita una importación de calendario verificable (CSV/JSON/ICS).
+# Horarios habituales suministrados por Los Intocables (hora peninsular española).
+# No son un calendario oficial: SOLO ayudan a comprobar y desambiguar.
+MATCH_SLOTS = {
+    'vpg-bronze-zero': ('22:20',),
+    'afj-cuarta': ('22:40',),
+    'vpg-quinta': ('23:00', '23:20'),
+}
+
 COMPETITION_REFERENCES = {
     'vpg-quinta': 'https://eafcstats.es/competitions/294',
     'vpg-bronze-zero': 'https://eafcstats.es/competitions/301',
-    # El enlace AFJ 5A compartido anteriormente NO corresponde a la liga 4A.
-    'afj-cuarta': 'https://www.eafcstats.es/competitions',
+    # Enlace indicado por el usuario para AFJ División 4A.
+    'afj-cuarta': 'https://www.eafcstats.es/competitions/259',
 }
 
 
@@ -51,7 +59,7 @@ def competitions_catalog(configured=(), counts=None):
     counts = counts or {}
     return [
         {'slug':slug, 'nombre':name, 'url_referencia':COMPETITION_REFERENCES[slug],
-         'calendario_conectado':slug in configured,
+         'calendario_conectado':slug in configured, 'horarios_habituales':list(MATCH_SLOTS[slug]),
          'partidos_clasificados':int(counts.get(slug,0))}
         for slug,name in DEFAULT_SLUGS.items()
     ]
@@ -284,7 +292,27 @@ def similarity(a,b):
     return 1.0 if x == y else SequenceMatcher(None, x, y).ratio()
 
 
-def match_candidates(match, fixtures, max_minutes=120):
+def scheduled_slot(dt, slug, tolerance_minutes=15):
+    """Comprobar que el horario del calendario respeta la franja habitual del club.
+
+    Si una jornada se mueve de horario, se podrá corregir en el panel de administración.
+    """
+    slots = MATCH_SLOTS.get(slug, ())
+    if not slots:
+        return True
+    here = dt.astimezone(TZ)
+    actual = here.hour*60 + here.minute
+    return any(abs(actual - (int(slot[:2])*60+int(slot[3:]))) <= tolerance_minutes for slot in slots)
+
+
+def match_candidates(match, fixtures, max_minutes=45):
+    """Identifica partido por *rival + fecha/hora*, nunca por hora sola.
+
+    EA puede registrar la marca de tiempo del partido al comienzo o al terminar.
+    Aceptamos desde 12 min antes hasta 40 min después del inicio previsto,
+    con una penalización adicional para encuentros que aún no habrían comenzado.
+    Esto evita etiquetar cualquier amistoso de las 22:40 como AFJ.
+    """
     out = []
     for f in fixtures:
         sim = similarity(match['opponent'], f['opponent'])
@@ -293,13 +321,18 @@ def match_candidates(match, fixtures, max_minutes=120):
         dt = parse_dt(f['starts_at'])
         if dt is None:
             continue
-        delta = abs((match['when'].astimezone(timezone.utc) - dt.astimezone(timezone.utc)).total_seconds()) / 60
-        if delta <= max_minutes:
-            out.append((delta, -sim, f))
-    return sorted(out, key=lambda entry: (entry[0],entry[1],entry[2]['uid']))
+        if not scheduled_slot(dt, f.get('competition_slug')):
+            continue
+        raw_delta = (match['when'].astimezone(timezone.utc)-dt.astimezone(timezone.utc)).total_seconds()/60
+        if raw_delta < -12 or raw_delta > min(40, max_minutes):
+            continue
+        # Penaliza horas futuras: suele ser más fiable un encuentro ya comenzado.
+        ranked_delta = raw_delta if raw_delta >= 0 else 24 + abs(raw_delta)*2
+        out.append((ranked_delta, -sim, f))
+    return sorted(out, key=lambda item:(item[0],item[1],item[2]['uid']))
 
 
-def choose_auto(games, fixtures, max_minutes=120):
+def choose_auto(games, fixtures, max_minutes=45):
     """Un partido programado no se asigna a dos encuentros EA; ambigüedades quedan sin clasificar."""
     # El mismo encuentro puede figurar en el calendario del panel y en un feed.
     # Unificarlo para evitar falsos conflictos.
@@ -429,7 +462,7 @@ def install(app, *, db_provider, state_getter, club_name='Los Intocables', is_ad
                 'calendario_panel':manual_count,'competiciones':competitions_catalog(configured),
                 'fuentes_configuradas':configured,
                 'fuentes':[{ 'slug':s,'last_success':ok,'error':error,'fixtures':n} for s,ok,error,n in rows],
-                'sync':status,'nota':'Los partidos sin rival y horario verificables permanecen sin asignar'}
+                'sync':status,'nota':'Los horarios indicados por el club no bastan: debe coincidir también el rival de un calendario fiable'}
 
     @app.get('/api/ligas/partidos')
     async def liga_matches():

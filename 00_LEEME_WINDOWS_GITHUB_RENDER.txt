@@ -1,0 +1,44 @@
+LOS INTOCABLES 4 — EDICION PREMIUM PARA WINDOWS (11-11-2026)
+========================================================
+
+Este ZIP contiene la web COMPLETA, no solo los 8 parches del iPhone.
+Todos los archivos estan en la raiz del ZIP (main.py, render.yaml, requirements.txt,
+static/, templates/, etc.). No hay carpeta exterior extra ni hay que ejecutar
+instaladores en Windows o Render.
+
+COMO SUBIR DESDE EL PC
+1. IMPORTANTE: haz primero una copia de tu Github actual.
+   https://github.com/marcgonzalezmendez03-beep/los-intocables4
+   Code > Download ZIP. Este paquete se basa en una copia anterior de tu proyecto,
+   NO en una copia verificada del ultimo commit del repositorio.
+2. Descomprime el ZIP con el Explorador de archivos de Windows.
+3. Para conservar tus posibles cambios recientes, compara la carpeta descomprimida
+   con tu repositorio antes de sustituir archivos.
+4. Copia los archivos y carpetas del ZIP a la raiz de tu repositorio local clonado
+   (no pongas todo dentro de una nueva subcarpeta). Confirma los cambios y haz push.
+   O usa GitHub web > Add file > Upload files con los archivos ya descomprimidos,
+   conservando sus rutas en static/ y templates/.
+5. Si Render tiene Auto-Deploy, empezara el despliegue al hacer commit en la rama
+   conectada. Si no, Render > Manual Deploy > Deploy latest commit.
+6. Verifica la portada, las pestanas, las fichas de partido y /api/health.
+
+QUE INCLUYE
+- Frontend PREMIUM negro grafito y dorado con transiciones de pestanas.
+- Vista responsive para movil y escritorio.
+- Explorador de partidos (cuando la API devuelve estadisticas).
+- VPG Division 5C (23:00 y 23:20), VPG Bronze Zero (22:20), AFJ 4A (22:40).
+- Bot + backend/administracion segun la copia base disponible.
+
+IMPORTANTE SOBRE LIGAS
+Los horarios son referencias, NO prueba de liga por si solos.
+Los enlaces de EAFCStats en calendarios_fuentes.json son fichas de referencia,
+no feeds CSV/JSON/ICS comprobados. Se necesita un calendario verificable o
+encuentros programados en el panel con rival y fecha para asignar liga.
+
+DATOS Y SEGURIDAD
+No publiques .env, tokens, site.db ni contrasenas.
+Antes de sustituir main.py confirma que no perderas cambios posteriores.
+Render gratuito puede entrar en suspension y los archivos locales no son
+almacenamiento persistente.
+
+Repositorio: https://github.com/marcgonzalezmendez03-beep/los-intocables4

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Acceso admin | Los Intocables</title>
+  <link rel="icon" type="image/png" href="/static/favicon.png"><link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="auth-page">
+  <main class="auth-layout">
+    <section class="auth-panel">
+      <a href="/" class="back-link">← Volver a la web</a>
+      <img class="login-crest" src="/static/escudo-intocables.webp" alt="Los Intocables"><p class="eyebrow">ÁREA PRIVADA</p>
+      <h1>Acceso de administración</h1>
+      <p class="auth-text">Gestiona el contenido editorial y la personalización visual del dashboard.</p>
+      <form id="login" class="auth-form">
+        <label>Usuario<input id="username" autocomplete="username" required></label>
+        <label>Contraseña<input id="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit" class="primary-button full">Entrar al panel</button>
+        <p id="message" class="error-text"></p>
+      </form>
+    </section>
+  </main>
+  <script>
+    document.getElementById('login').addEventListener('submit', async e => {
+      e.preventDefault();
+      const r = await fetch('/api/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          username: document.getElementById('username').value,
+          password: document.getElementById('password').value
+        })
+      });
+      if (r.ok) location.href = '/admin';
+      else document.getElementById('message').textContent = (await r.json()).detail || 'Error al acceder';
+    });
+  </script>
+</body>
+</html>

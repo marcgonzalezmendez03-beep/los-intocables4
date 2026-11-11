@@ -1,0 +1,15 @@
+ARCHIVOS DE LA NUEVA INTERFAZ (dentro de este mismo ZIP):
+- templates/index.html
+- static/stats-plus.css
+- static/stats-plus.js
+- static/partido.css
+- static/style.css
+- static/hub.css
+- league_auto.py
+- calendarios_fuentes.json
+
+Y se incluye toda la base lista para Render: main.py, requirements.txt,
+render.yaml, plantillas, assets, endpoints y archivos auxiliares.
+
+No subas el ZIP comprimido directamente a la raiz de GitHub como si fuera
+una pagina web: primero hay que descomprimirlo y subir su contenido.

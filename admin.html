@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Administración | Los Intocables</title>
+  <link rel="icon" type="image/png" href="/static/favicon.png"><link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/hub.css?v=1">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="/"><span class="brand-mark"><img src="/static/escudo-intocables.webp" alt="Escudo Los Intocables"></span><span class="brand-copy"><strong>Los Intocables</strong><small>PANEL DE ADMINISTRACIÓN</small></span></a>
+      <div class="header-actions">
+        <a class="ghost-button" href="/">Ver web</a><a class="ghost-button" href="/competiciones">Ver ligas</a>
+        <button class="ghost-button" id="logout">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <main class="content-wrap admin-page-wrap">
+      <section class="hero-card admin-hero">
+        <div class="hero-copy">
+          <p class="eyebrow">ADMINISTRACIÓN</p>
+          <h1>Control editorial del club</h1>
+          <p class="hero-text">Personaliza el contenido visual del sitio. Las estadísticas y partidos siguen llegando directamente desde FC 27.</p>
+        </div>
+      </section>
+
+      <section class="panel-card admin-form-card">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">PERSONALIZACIÓN</p>
+            <h2>Identidad y portada</h2>
+          </div>
+          <span class="panel-chip">GUARDADO LOCAL</span>
+        </div>
+        <form id="settings" class="settings-grid">
+          <label>Nombre visible<input name="title" maxlength="100"></label>
+          <label>Subtítulo<input name="subtitle" maxlength="200"></label>
+          <label class="full-width">URL pública del escudo (https://...)<input name="crest_url" maxlength="1000" placeholder="https://..."></label>
+          <label class="full-width">Anuncio principal<textarea name="announcement" maxlength="500" rows="4"></textarea></label>
+          <div class="form-actions full-width">
+            <button type="submit" class="primary-button">Guardar cambios</button>
+            <button type="button" id="refresh" class="ghost-button">Actualizar FC27 ahora</button>
+          </div>
+          <p id="message" class="note full-width"></p>
+        </form>
+      </section>
+      <section class="panel-card admin-form-card profile-admin">
+        <div class="panel-head"><div><p class="eyebrow">PLANTILLA</p><h2>Personalizar fichas de jugadores</h2></div></div>
+        <p class="section-intro">Los nombres de la API identifican a cada jugador. Puedes ocultar jugadores de la plantilla pública, cambiar su nombre, dorsal y posición, y elegir una foto mediante URL o subida desde tu ordenador. Las estadísticas reales no se modifican.</p>
+        <div id="profile-editor" class="profile-editor"><p class="note">Cargando jugadores…</p></div>
+      </section>
+      <section class="panel-card admin-form-card hub-admin-block"><div class="panel-head"><div><p class="eyebrow">GESTIÓN DEL CLUB</p><h2>Calendario de partidos</h2></div><span class="panel-chip">EDITABLE</span></div>
+        <p class="section-intro">Añade aquí los próximos partidos. Nada se publicará hasta que lo guardes.</p>
+        <form id="fixture-form" class="settings-grid">
+          <input type="hidden" name="fixture_id">
+          <label>Rival<input name="opponent" required maxlength="100" placeholder="Nombre del rival"></label>
+          <label>Competición<select name="competition_slug" id="fixture-comp"></select></label>
+          <label>Fecha y hora (Madrid)<input type="datetime-local" name="starts_at" required></label>
+          <label>Localía<select name="venue"><option>Casa</option><option>Fuera</option><option>Por definir</option></select></label>
+          <label>Estado<select name="status"><option value="programado">Programado</option><option value="jugado">Jugado</option><option value="aplazado">Aplazado</option><option value="cancelado">Cancelado</option></select></label>
+          <label>Observaciones<input name="notes" maxlength="350" placeholder="Jornada, streaming…"></label>
+          <label>Goles Los Intocables<input name="score_for" min="0" max="99" type="number" placeholder="—"></label>
+          <label>Goles rival<input name="score_against" min="0" max="99" type="number" placeholder="—"></label>
+          <div class="form-actions full-width"><button class="primary-button">Guardar partido</button><button id="fixture-cancel" type="button" class="ghost-button">Nuevo / cancelar edición</button></div><p class="note full-width" id="fixture-msg"></p>
+        </form><div id="fixture-admin-list" class="hub-admin-list"></div>
+      </section>
+      <section class="panel-card admin-form-card hub-admin-block"><div class="panel-head"><div><p class="eyebrow">LIGAS</p><h2>Editar competiciones</h2></div></div><p class="note">Las tres competiciones conocidas ya vienen configuradas. Puedes editar sus horarios y añadir sus enlaces oficiales.</p><div id="competitions-editor" class="hub-admin-list"></div></section>
+      <section class="panel-card admin-form-card hub-admin-block"><div class="panel-head"><div><p class="eyebrow">FC27</p><h2>Clasificar partidos reales</h2></div></div><p class="note">Los encuentros no siempre vienen identificados como liga o amistoso. Puedes asignar una competición o marcar «Amistoso», sin inventar datos.</p>
+        <form id="label-form" class="settings-grid"><label>ID del partido<input name="match_id" required placeholder="matchId real de FC 27"></label><label>Competición<select name="competition_slug" id="label-comp"></select></label><label>Etiqueta<input name="label" maxlength="120" placeholder="Amistoso / Jornada 3 / Copa…"></label><div class="form-actions"><button class="primary-button">Guardar etiqueta</button></div><p id="label-msg" class="note"></p></form><div id="match-admin-list" class="hub-admin-list"></div>
+      </section>
+      <section class="panel-card admin-form-card hub-admin-block"><div class="panel-head"><div><p class="eyebrow">RECLUTAMIENTO</p><h2>Solicitudes de jugadores</h2></div><span class="panel-chip">SOLO ADMIN</span></div><div id="applications-admin" class="hub-admin-list"><p class="note">Cargando solicitudes…</p></div></section>
+    </main>
+  </div>
+  <script src="/static/admin.js"></script><script src="/static/admin_hub.js?v=1"></script>
+</body>
+</html>

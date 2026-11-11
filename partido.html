@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080c0d">
+  <title>Explorador de partidos · Los Intocables</title>
+  <link rel="icon" href="/static/favicon.png">
+  <link rel="stylesheet" href="/static/partido.css?v=2">
+</head>
+<body>
+  <header class="topline">
+    <a class="branding" href="/#partidos"><img src="/static/escudo-intocables.webp" alt="Escudo Los Intocables"><span><strong>LOS INTOCABLES</strong><small>FC27 / MATCH EXPLORER</small></span></a>
+    <a class="back" href="/#partidos">← Volver al historial</a>
+  </header>
+  <main class="wrapper">
+    <div class="headline"><span class="overline">CENTRO DE ESTADÍSTICAS / ENCUENTRO</span><h1>Explorador de <em>partidos</em></h1><p>Datos reales de EA FC27, rival, jugadores y rendimiento individual.</p></div>
+    <section class="scorecard" aria-label="Marcador del partido">
+      <div class="scoremeta"><span id="competition" class="competition">PARTIDO FC27</span><span id="match-date">Consultando fecha...</span></div>
+      <div class="scores"><div class="teamblock"><img src="/static/escudo-intocables.webp" alt="Escudo Los Intocables"><span id="our-name">LOS INTOCABLES</span><small>NUESTRO CLUB</small></div>
+        <div class="middle"><div id="score" class="score">– : –</div><span id="verdict" class="verdict">—</span></div>
+        <div class="teamblock"><div id="opponent-image" class="opponent-icon">⚽</div><span id="opponent-name">RIVAL</span><small>CONTRINCANTE</small></div>
+      </div>
+      <div class="scorefoot"><span id="match-id">ID: —</span><span id="source-indicator">Datos de EA FC27</span></div>
+    </section>
+    <nav class="tabs" aria-label="Explorar partido">
+      <button type="button" class="active" data-tab="resumen">◈ Resumen</button>
+      <button type="button" data-tab="estadisticas">◫ Comparación</button>
+      <button type="button" data-tab="jugadores">♙ Jugadores</button>
+      <button type="button" data-tab="alineaciones">♟ Participantes</button>
+    </nav>
+    <div id="status" class="notice" role="status">Obteniendo estadísticas y comprobando el archivo del club...</div>
+    <section id="main-content" aria-live="polite"></section>
+    <footer>LOS INTOCABLES · EA FC27 · Las métricas solo aparecen cuando la API dispone de datos reales. Los desgloses de eventos proceden de mapeos comunitarios no oficiales.</footer>
+  </main>
+  <script>window.MATCH_ID = {{ match_id | tojson }};</script>
+  <script src="/static/partido.js?v=2" defer></script>
+</body>
+</html>
